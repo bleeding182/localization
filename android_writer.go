@@ -7,11 +7,57 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"text/template"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
+const androidTemplate = `
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+{{range $header := $.Headers -}}
+<!-- {{$header}} -->
+{{end -}}
+<resources>
+{{- range $g := $.Groups}}
+    <!-- region {{.Name}} -->
+    {{- range $as := $g.Strings}}
+    {{- if .Comment}}
+    <!-- {{.Comment}} -->
+    {{- end}}
+    <string name="{{.Key}}">{{.Value}}</string>
+    {{- end}}
+    <!-- endregion -->
+{{end}}
+    <!-- region Plurals -->
+{{- range $p := $.Plurals}}
+    <plurals name="{{.Key}}">
+    {{- range $q, $v := .Values}}
+        <item quantity="{{$q}}">@string/{{$v.Key.Original}}</item>
+    {{- end}}
+    </plurals>
+    <!-- endregion -->
+{{end}}
+</resources>
+`
+
 const tag = "android"
+
+type AndroidModel struct {
+	Headers []string
+	Groups  []Group
+	Plurals *map[string]quantityString
+}
+
+type Group struct {
+	Name    string
+	Strings []AndroidString
+}
+
+type AndroidString struct {
+	Key     string
+	Value   string
+	Comment string
+}
 
 func init() {
 	writers[tag] = androidWriter{}
@@ -22,8 +68,8 @@ var outputFolder *string
 
 func (writer androidWriter) registerCommand(app *kingpin.Application) {
 	command := app.Command(tag, "Export your strings as xml for Android. All values from 'value' will be escaped, 'android' will be used as-is.\n\nPlurals can be added with a `__pl_<one|other|...>` suffix")
-	regions = command.Flag("regions", "Generate <!-- region group --> comments to group strings.").Bool()
 	outputFolder = command.Flag("outputFolder", "Set the output directory where the values-* folders will be generated.").Default("exports").String()
+	//	regions = command.Flag("regions", "Generate <!-- region group --> comments to group strings.").Bool()
 }
 
 type androidWriter struct {
@@ -45,34 +91,28 @@ func (writer androidWriter) Export(sheet *sheet) {
 	f := openFile(localeFolder, "generated_strings")
 	defer f.Close()
 
-	writeLine(f, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-
-	for _, header := range sheet.Headers {
-		writeLine(f, fmt.Sprintf("<!-- %v -->\n", header))
-	}
-
 	overrideIndex, ok := sheet.Columns[tag]
 	if !ok {
 		overrideIndex = -1
 	}
 
-	writeLine(f, "<resources>\n")
-	defer writeLine(f, "</resources>\n")
+	model := &AndroidModel{
+		Headers: sheet.Headers,
+		Groups:  make([]Group, 0),
+		Plurals: &sheet.Plurals,
+	}
 
-	var group string
-
+	var group Group
 	for _, ls := range sheet.Data {
-		if *regions && group != ls.Key.group() {
-			if group != "" {
-				writeLine(f, "    <!-- endregion -->\n\n")
+		if group.Name != ls.Key.Group() {
+			if group.Name != "" {
+				model.Groups = append(model.Groups, group)
 			}
-			writeLine(f, fmt.Sprintf("    <!-- region %v -->\n", ls.Key.group()))
-			group = ls.Key.group()
+			group = Group{
+				Name:    ls.Key.Group(),
+				Strings: make([]AndroidString, 0),
+			}
 		}
-		if ls.Comment != "" {
-			writeLine(f, fmt.Sprintf("    <!-- %v -->\n", ls.Comment))
-		}
-
 		var value string
 		if overrideIndex >= 0 && overrideIndex < len(ls.Entries) && ls.Entries[overrideIndex] != "" {
 			value = ls.Entries[overrideIndex]
@@ -80,18 +120,21 @@ func (writer androidWriter) Export(sheet *sheet) {
 			value = html.EscapeString(writer.normalize(ls.Value))
 		}
 
-		writeLine(f, fmt.Sprintf("    <string name=\"%v\">%v</string>\n", ls.Key.original(), value))
+		group.Strings = append(group.Strings, AndroidString{ls.Key.Original(), value, ls.Comment})
 	}
-	if *regions && group != "" {
-		writeLine(f, "    <!-- endregion -->\n\n")
+	if group.Name != "" {
+		model.Groups = append(model.Groups, group)
 	}
 
-	for _, ps := range sheet.Plurals {
-		writeLine(f, fmt.Sprintf("    <plurals name=\"%v\">\n", ps.Key))
-		for key, item := range ps.Values {
-			writeLine(f, fmt.Sprintf("        <item quantity=\"%v\">@string/%v</item>\n", key, item.Key.original()))
-		}
-		writeLine(f, "    </plurals>\n")
+	template, err := template.New("file").Parse(androidTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	err = template.Execute(f, model)
+
+	if err != nil {
+		panic(err)
 	}
 }
 
