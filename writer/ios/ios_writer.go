@@ -1,11 +1,14 @@
-package main
+package ios
 
 import (
+	"fmt"
+	"os"
 	"path"
 	"regexp"
 	"strings"
 	"text/template"
 
+	"github.com/bleeding182/localization/writer"
 	"github.com/iancoleman/strcase"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -94,18 +97,17 @@ public struct Strings {
 
 const tagIos = "ios"
 
-func init() {
-	writers[tagIos] = iosWriter{}
+var stringsFolder, utilFolder *string
+
+func (writer IOSWriter) RegisterCommand(app *kingpin.Application) {
+	command := app.Command(tagIos, "Export your strings for iOS. This will generate LocalizableGen.strings in *.lproj folders along with a Strings.swift util class.")
+	stringsFolder = command.Flag("outputFolder", "Set the output directory where the *.lproj folders will be generated.").Default("exports").String()
+	utilFolder = command.Flag("utilOutputFolder", "Set the output directory where the util-file will be generated. This Strings.swift file contains constants for easier access.").Default("exports").String()
 }
 
-func (writer iosWriter) registerCommand(app *kingpin.Application) {
-	app.Command(tagIos, "")
-}
+type IOSWriter struct{}
 
-type iosWriter struct {
-}
-
-func (writer iosWriter) Tag() string {
+func (writer IOSWriter) Tag() string {
 	return tagIos
 }
 
@@ -113,57 +115,62 @@ var funcs = template.FuncMap{
 	"camelcase": strcase.ToCamel,
 }
 
-func (writer iosWriter) Export(locale string, model *LocalizationModel) {
+func (writer IOSWriter) Export(locale string, model *writer.LocalizationModel) {
 	var folder string
 	if locale == "default" {
-		folder = "values"
+		folder = "Base.lproj"
 	} else {
-		folder = "values-" + locale
+		folder = locale + ".lproj"
 	}
 
-	localeFolder := path.Join(*outputFolder, folder)
+	localeFolder := path.Join(*stringsFolder, folder)
 
 	stringsTemplate, err := template.New("strings").Parse(iosStringsTemplate)
-	if err != nil {
-		panic(err)
-	}
-	utilTemplate, err := template.New("util").Funcs(funcs).Parse(iosStringsUtilTemplate)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	pluralsTemplate, err := template.New("plurals").Parse(iosStringsDictTemplate)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
-	stringsFile := openFile(localeFolder, "Localizable.strings")
+	stringsFile := openFile(localeFolder, "LocalizableGen.strings")
 	defer stringsFile.Close()
 	err = stringsTemplate.Execute(stringsFile, model)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
-	stringsUtilFile := openFile(localeFolder, "Util.swift")
-	defer stringsUtilFile.Close()
-	err = utilTemplate.Execute(stringsUtilFile, model)
-	if err != nil {
-		panic(err)
-	}
-
-	stringsDictFile := openFile(localeFolder, "Localizable.stringsdict")
+	stringsDictFile := openFile(localeFolder, "LocalizableGen.stringsdict")
 	defer stringsDictFile.Close()
 	err = pluralsTemplate.Execute(stringsDictFile, model)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
+	if locale == "default" {
+		utilTemplate, err := template.New("util").Funcs(funcs).Parse(iosStringsUtilTemplate)
+		check(err)
+		stringsUtilFile := openFile(*utilFolder, "Strings.swift")
+		defer stringsUtilFile.Close()
+		err = utilTemplate.Execute(stringsUtilFile, model)
+		check(err)
+	}
 }
 
 var androidStringFormat = regexp.MustCompile("%(\\d\\$)?s")
 
-func (writer iosWriter) Normalize(s string) string {
-	var formatted = iosStringFormat.ReplaceAllStringFunc(s, func(s string) string {
+func (writer IOSWriter) Normalize(s string) string {
+	var formatted = androidStringFormat.ReplaceAllStringFunc(s, func(s string) string {
 		return strings.Replace(s, "s", "@", 1)
 	})
 	return strings.Replace(formatted, "\"", "\\\"", -1)
+}
+
+func openFile(folder string, name string) *os.File {
+	foldername := fmt.Sprintf("%v", folder)
+	os.MkdirAll(foldername, os.ModePerm)
+
+	filename := fmt.Sprintf("%v/%v", foldername, name)
+	f, err := os.Create(filename)
+	check(err)
+	return f
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }

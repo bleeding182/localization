@@ -1,0 +1,32 @@
+
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<!-- Do _not_ modify -->
+<!-- https://docs.google.com/spreadsheets/d/1upHiDHWu5m30tYdhMDP4GXheOWUE4r3VrHfmAUXiuyI#gid=441014772 -->
+<!-- Last updated at 2018-05-01T15:11:59+02:00 -->
+<resources>
+    <!-- region greeting -->
+    <string name="greeting_hello_world">Hallo, Welt!</string>
+    <string name="greeting_text">Ist das nicht ein nettes Android Gerät?</string>
+    <!-- endregion -->
+
+    <!-- region song_line -->
+    <string name="song_line__bottles_of_beer__pl_one">%1$d Flasche Bier an der Wand, %1$d Flasche Bier.</string>
+    <string name="song_line__bottles_of_beer__pl_other">%1$d Flaschen Bier an der Wand, %1$d Flaschen Bier.</string>
+    <!-- endregion -->
+
+    <!-- region weird_characters -->
+    <string name="weird_characters__example_1"></string>
+    <string name="weird_characters__example_2">Fragen &amp; Antworten</string>
+    <string name="weird_characters__example_3">Was&#39;n &#34;das&#34;?</string>
+    <string name="weird_characters__example_4">Ein %1$s iOS format text, %s oder %2$s</string>
+    <string name="weird_characters__example_5">Ein &lt;a href=&#34;http://www.google.com&#34;&gt;Link&lt;/a&gt;</string>
+    <!-- endregion -->
+
+    <!-- region Plurals -->
+    <plurals name="song_line__bottles_of_beer">
+        <item quantity="one">@string/song_line__bottles_of_beer__pl_one</item>
+        <item quantity="other">@string/song_line__bottles_of_beer__pl_other</item>
+    </plurals>
+    <!-- endregion -->
+
+</resources>

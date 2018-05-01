@@ -1,10 +1,14 @@
-package main
+package android
 
 import (
+	"fmt"
+	"os"
 	"path"
 	"regexp"
 	"strings"
 	"text/template"
+
+	"github.com/bleeding182/localization/writer"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -39,24 +43,21 @@ const androidTemplate = `
 
 const tagAndroid = "android"
 
-func init() {
-	writers[tagAndroid] = androidWriter{}
-}
-
 var regions *bool
+var outputFolder *string
 
-func (writer androidWriter) registerCommand(app *kingpin.Application) {
-	app.Command(tagAndroid, "Export your strings as xml for Android. All values from 'value' will be escaped, 'android' will be used as-is.\n\nPlurals can be added with a `__pl_<one|other|...>` suffix")
+func (writer AndroidWriter) RegisterCommand(app *kingpin.Application) {
+	command := app.Command(tagAndroid, "Export your strings as xml for Android. All values from 'value' will be escaped, 'android' will be used as-is.\n\nPlurals can be added with a `__pl_<one|other|...>` suffix")
+	outputFolder = command.Flag("outputFolder", "Set the output directory where the values-* folders will be generated.").Default("exports").String()
 }
 
-type androidWriter struct {
-}
+type AndroidWriter struct{}
 
-func (Writer androidWriter) Tag() string {
+func (Writer AndroidWriter) Tag() string {
 	return tagAndroid
 }
 
-func (Writer androidWriter) Export(locale string, model *LocalizationModel) {
+func (Writer AndroidWriter) Export(locale string, model *writer.LocalizationModel) {
 	var folder string
 	if locale == "default" {
 		folder = "values"
@@ -69,21 +70,32 @@ func (Writer androidWriter) Export(locale string, model *LocalizationModel) {
 	defer f.Close()
 
 	template, err := template.New("file").Parse(androidTemplate)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
 	err = template.Execute(f, model)
-
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 }
 
 var iosStringFormat = regexp.MustCompile("%(\\d\\$)?@")
 
-func (Writer androidWriter) Normalize(s string) string {
+func (Writer AndroidWriter) Normalize(s string) string {
 	return iosStringFormat.ReplaceAllStringFunc(s, func(s string) string {
 		return strings.Replace(s, "@", "s", 1)
 	})
+}
+
+func openFile(folder string, name string) *os.File {
+	foldername := fmt.Sprintf("%v", folder)
+	os.MkdirAll(foldername, os.ModePerm)
+
+	filename := fmt.Sprintf("%v/%v", foldername, name)
+	f, err := os.Create(filename)
+	check(err)
+	return f
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
