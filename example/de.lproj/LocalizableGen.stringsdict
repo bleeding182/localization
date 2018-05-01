@@ -1,0 +1,27 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Do _not_ modify -->
+<!-- https://docs.google.com/spreadsheets/d/1upHiDHWu5m30tYdhMDP4GXheOWUE4r3VrHfmAUXiuyI#gid=441014772 -->
+<!-- Last updated at 2018-05-01T15:11:52+02:00 -->
+<plist version="1.0">
+	<dict>
+		<key>song_line__bottles_of_beer</key>
+        <dict>
+			<key>NSStringLocalizedFormatKey</key>
+			<string>%#@song_line__bottles_of_beerKey@</string>
+			<key>song_line__bottles_of_beerKey</key>
+			<dict>
+				<key>NSStringFormatSpecTypeKey</key>
+				<string>NSStringPluralRuleType</string>
+				<key>NSStringFormatValueTypeKey</key>
+				<string>d</string>
+                <key>one</key>
+                <string>%1$d Flasche Bier an der Wand, %1$d Flasche Bier.</string>
+                <key>other</key>
+                <string>%1$d Flaschen Bier an der Wand, %1$d Flaschen Bier.</string>
+			</dict>
+        </dict>
+    </dict>
+
+</plist>

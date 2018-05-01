@@ -1,0 +1,22 @@
+
+/* Do _not_ modify */
+/* https://docs.google.com/spreadsheets/d/1upHiDHWu5m30tYdhMDP4GXheOWUE4r3VrHfmAUXiuyI#gid=0 */
+/* Last updated at 2018-05-01T15:11:52+02:00 */
+
+/** greeting **/
+/* Default greeting. */
+"greeting_hello_world" = "Hello, world!";
+/* Overridden per platform */
+"greeting_text" = "Isn't this a nice iOS device?";
+
+/** song_line **/
+"song_line__bottles_of_beer__pl_one" = "%1$d bottle of beer on the wall, %1$d bottle of beer.";
+"song_line__bottles_of_beer__pl_other" = "%1$d bottles of beer on the wall, %1$d bottles of beer.";
+
+/** weird_characters **/
+"weird_characters__example_1" = "Rock &#39;n&#39; Roll";
+"weird_characters__example_2" = "Questions &amp; Answers";
+"weird_characters__example_3" = "What&#39;s \&#34;This\&#34;";
+"weird_characters__example_4" = "Some %1$@ iOS style string, %@ or %2$@";
+"weird_characters__example_5" = "Some &lt;a href=\&#34;http://www.google.com\&#34;&gt;Link&lt;/a&gt;";
+
