@@ -67,13 +67,7 @@ func loadSpreadSheet() ([]*sheetData, error) {
 	results := make(chan *sheetData)
 	for _, sheet := range sheetsInfo.Sheets {
 		readRange := fmt.Sprintf("%v!A:M", sheet.Properties.Title)
-		go func(readRange string, sheetId string) {
-			res, err := srv.Spreadsheets.Values.Get(*sheetID, readRange).Do()
-			if err != nil {
-				panic(err)
-			}
-			results <- &sheetData{res, sheetId}
-		}(readRange, strconv.FormatInt(sheet.Properties.SheetId, 10))
+		go readData(results, srv, readRange, strconv.FormatInt(sheet.Properties.SheetId, 10))
 	}
 
 	sheetData := make([]*sheetData, 0, len(sheetsInfo.Sheets))
@@ -86,6 +80,14 @@ func loadSpreadSheet() ([]*sheetData, error) {
 	}
 
 	return sheetData, nil
+}
+
+func readData(results chan *sheetData, srv *sheets.Service, readRange string, sheetId string) {
+	res, err := srv.Spreadsheets.Values.Get(*sheetID, readRange).Do()
+	if err != nil {
+		panic(err)
+	}
+	results <- &sheetData{res, sheetId}
 }
 
 // getClient uses a Context and Config to retrieve a Token
