@@ -2,7 +2,7 @@
 <?xml version=\"1.0\" encoding=\"utf-8\"?>
 <!-- Do _not_ modify -->
 <!-- https://docs.google.com/spreadsheets/d/1upHiDHWu5m30tYdhMDP4GXheOWUE4r3VrHfmAUXiuyI#gid=441014772 -->
-<!-- Last updated at 2018-05-01T15:11:59+02:00 -->
+<!-- Last updated at 2018-05-02T21:16:45+02:00 -->
 <resources>
     <!-- region greeting -->
     <string name="greeting_hello_world">Hallo, Welt!</string>
