@@ -1,6 +1,6 @@
 ## Localization Util
 
-A util to export localized strings from Google Sheets to the xml (Android) or strings (ios) format.
+A util to export localized strings from Google Sheets to the xml (Android) or strings (iOS) format.
 
 ### Example
 
@@ -21,9 +21,9 @@ Create a new Google Sheet with the following columns: `key, value, android, ios,
 
 Value is the default value for your string, but can be overridden per platform in the respective column. While the default value might get escaped or modified during the export, the platform column will be written as-is. Comments are just comments.
 
-Copy the sheet id (https://docs.google.com/spreadsheets/d/{{sheet id}}/edit#gid=0) and run the util to export your strings (default arguments will export to a `/exports` folder)
+Copy the sheet id from the url (`https://docs.google.com/spreadsheets/d/{{sheet_id}}/edit#gid=0`) and run the util to export your strings (default arguments will export to a `/exports` folder)
 
-    [localization] --sheetID 1upHiDHWu5m30tYdhMDP4GXheOWUE4r3VrHfmAUXiuyI [ios|android]
+    [localization] --sheetID {{sheet_id}} [ios|android]
 
 On Android this will result in a `generated_strings.xml` with the following content:
 
